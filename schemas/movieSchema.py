@@ -15,22 +15,28 @@ class Query(graphene.ObjectType):
 
     def resolve_movies(self, info):
         return db.session.execute(db.select(MovieModel)).scalars()
+
+    find_movie = graphene.Field(Movie, movie_id=graphene.Int(required=True))
+    def resolve_find_movie(self, info, movie_id):
+        print(movie_id)
+        movie = db.session.execute(db.select(MovieModel).where(MovieModel.id == movie_id)).scalars().first()
+        return movie
     
 class AddMovie(graphene.Mutation):
     class Arguments:
         title = graphene.String(required=True)
         description = graphene.String(required=True)
         release_year = graphene.Int(required=True)
-        genres = graphene.List(required=True)
+        genres = graphene.List(graphene.Int)
 
     movie = graphene.Field(Movie)
 
     def mutate(self, info, title, description, release_year, genres):
         with Session(db.engine) as session:
             with session.begin():
-                genres = session.execute(db.select(GenreModel).where(GenreModel.name.in_(genres))).scalars().all()
                 print(genres)
-                movie = MovieModel(title=title, description=description, release_year=release_year, genres=genres)
+                genres_db = session.execute(db.select(GenreModel).where(GenreModel.id.in_(genres))).scalars().all()
+                movie = MovieModel(title=title, description=description, release_year=release_year, genres=genres_db)
                 session.add(movie)
 
             session.refresh(movie)
@@ -42,21 +48,22 @@ class UpdateMovie(graphene.Mutation):
         title = graphene.String(required=True)
         description = graphene.String(required=True)
         release_year = graphene.Int(required=True)
-        genres = graphene.List(required=True)
+        genres = graphene.List(graphene.Int)
 
     movie = graphene.Field(Movie)
 
-    def mutate(self, info, id, title, description, release_year):
+    def mutate(self, info, id, title, description, release_year, genres):
         with Session(db.engine) as session:
             with session.begin():
-                genres = session.execute(db.select(GenreModel).where(GenreModel.name.in_(genres))).scalars().all()
                 print(genres)
+                genres_db = session.execute(db.select(GenreModel).where(GenreModel.id.in_(genres))).scalars().all()
+                print(genres_db)
                 movie = session.execute(db.select(MovieModel).where(MovieModel.id == id)).scalars().first()
                 if movie:
                     movie.title = title
                     movie.description = description
                     movie.release_year = release_year
-                    movie.genres = genres
+                    movie.genres = genres_db
                 else:
                     return None
 

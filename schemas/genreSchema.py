@@ -15,6 +15,13 @@ class Query(graphene.ObjectType):
     def resolve_genres(self, info):
         return db.session.execute(db.select(GenreModel)).scalars()
     
+    find_genre= graphene.Field(Genre, genre_id=graphene.Int(required=True))
+    def resolve_find_genre(self, info, genre_id):
+        print(genre_id)
+        genres = db.session.execute(db.select(GenreModel).where(GenreModel.id == genre_id)).scalars().first()
+        print(genres)
+        return genres
+    
 class AddGenre(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)

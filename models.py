@@ -8,8 +8,8 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class=Base)
 
 movie_genre = db.Table('movie_genre',
-    db.Column('movie_id', db.ForeignKey('movies.id'), primary_key=True),
-    db.Column('genre_id', db.ForeignKey('genres.id'), primary_key=True)
+    db.Column('movie_id', db.Integer, db.ForeignKey('movies.id'), primary_key=True),
+    db.Column('genre_id', db.Integer, db.ForeignKey('genres.id'), primary_key=True)
 )
 
 class Genre(Base):
@@ -23,9 +23,4 @@ class Movie(Base):
     title: Mapped[str] = mapped_column(db.String(255))
     description: Mapped[str] = mapped_column(db.String(255))
     release_year: Mapped[int] = mapped_column(db.Integer)
-    genres: Mapped[List["Genre"]] = db.relationship(secondary=movie_genre, backref=db.backref('movies', lazy='dynamic'))
-
-# order_product = db.Table('Order_Product',
-#     db.Column('order_id', db.Integer, db.ForeignKey('Orders.id'), primary_key = True),
-#     db.Column('product_id', db.Integer, db.ForeignKey('Products.id'), primary_key = True)
-# )
+    genres: Mapped[List["Genre"]] = db.relationship(secondary=movie_genre, backref=db.backref('genres'), lazy='subquery')
